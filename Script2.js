@@ -1,3 +1,5 @@
+let logicPath = []; // Stores path followed by function e so loops can be identified . Each element of array is a branch formed by connecting two connection lines to outpin of a gate .
+
 function connect(fromPin, toPin){
     connectionPath.pop();
     toPin.connectedTo.push(fromPin);
@@ -16,21 +18,22 @@ function connect(fromPin, toPin){
 function integrateCircuit(){
 
 }
-function evaluateLogic(){
-
-}
-
 
 
 
 function constructLogic(){
     logic = [];
+
     for(let i=0; i<outpins.length; i++){
         if(outpins[i].connectedTo != undefined){
+
+            logicPath = [];
             let logicString = "(";
+
             for(let j=0; j<outpins[i].connectedTo.length-1; j++){
                 logicString += "("+e(outpins[i].connectedTo[j])+")|";
             }
+
             logicString += "("+e(outpins[i].connectedTo[outpins[i].connectedTo.length-1])+"))";
             logic.push(logicString);
         }
@@ -51,8 +54,7 @@ function e(pin){
     let i = pin.gate.outpins.indexOf(pin);
     let gateLogic = "("+pin.gate.type.logic[i]+")";
     
-    console.log(i)
-    // for(let i=0; i<pin.gate.outpins.length; i++){
+    
         for(let j=0; j<pin.gate.inpins.length;j++){
             if(pin.gate.inpins[j].connectedTo.type != "main_input_pin"){
                 let pinLogic = gateLogic;
@@ -67,7 +69,34 @@ function e(pin){
             //    str += "("+pin.gate.type.logic[i].replaceAll(""+j, pin.gate.inpins[j].connectedTo.state+")");
             }
         }
-    // }
+
 
     return gateLogic;
 }
+
+
+
+// Simulating the logic
+
+function evaluate(){
+    for(let i=0; i<gates.length; i++){
+        for(let j=0;j<gates[i].inConnections.length;j++){
+            gates[i].inConnections[j].state =  gates[i].inConnections[j].from.state;
+            
+            gates[i].inConnections[j].to.state =  gates[i].inConnections[j].from.state;
+            const func = ()=>{
+                for(let x=0; x<gates[i].outpins.length;x++){
+                    
+                    let logicString = gates[i].type.logic[x];
+                    for(let y=0; y<gates[i].inpins.length; y++){
+                        logicString = logicString.replaceAll(`pin${y}`, gates[i].inpins[y].state);
+                    }
+                    gates[i].outpins[x].state = eval(logicString)?1:2;
+                }
+            };
+            setTimeout(func, 200);
+        }
+    }
+}
+
+setInterval(evaluate, 200);

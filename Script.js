@@ -189,7 +189,7 @@ class connection{
 }
 class pin{
     constructor(x, y, state, type, gate){
-        this.state = 0;
+        this.state = state;
         this.x = x;
         this.y = y;
         this.type = type; // Input pin / output pin
@@ -510,11 +510,12 @@ function drawConnections(){
     
     // Drawings connection lines that are connected to a pin
     ctx.lineWidth = settings.connectionLineWidth;
-    ctx.strokeStyle = settings.connectionLineColor;
-
+    
     for(let i=0; i<gates.length; i++){
         for(let j=0; j<gates[i].inConnections.length; j++){
             const line = gates[i].inConnections[j];
+            ctx.strokeStyle = settings.connectionLineColor;
+
             if(line.state == 1){
                 ctx.strokeStyle = line.activeColor;
             }
