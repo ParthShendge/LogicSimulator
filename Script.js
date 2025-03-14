@@ -135,6 +135,7 @@ class gate{
         this.y    = y;
         this.type = type;
         this.inConnections  = inConnections;
+        this.connectionLevel = 0;
 
         this.beingDragged = false; // Set to true while changing the position of gate
         
@@ -389,72 +390,6 @@ function handleEnd(e){
     
 }
 
-
-
-
-/*function constructLogic(){
-    logic = [];
-    for(let i=0; i<outpins.length; i++){
-        // switch(outpins[i].connectedTo.gate.type.name){
-        //     case "AND":
-        //         AND(outpins[i].connectedTo.gate, true);
-        //     break;
-        //     case "OR":
-        //         OR(outpins[i].connectedTo.gate, true);
-        //     break;
-        //     case "NOT":
-        //         NOT(outpins[i].connectedTo.gate, true);
-            
-        // }
-        if(outpins[i].connectedTo != undefined){
-            let logicString = "(";
-            for(let j=0; j<outpins[i].connectedTo.length-1; j++){
-                logicString += "("+e(outpins[i].connectedTo[j])+")|";
-            }
-            logicString += "("+e(outpins[i].connectedTo[outpins[i].connectedTo.length-1])+"))";
-            logic.push(logicString);
-        }
-        else{
-            logic.push(undefined);
-        }
-        
-    }
-}
-
-
-function e(pin){
-    //console.log(pin.gate, pin)
-    if(pin.gate == undefined){
-        return "inpin["+inpins.indexOf(pin)+"]";
-    }
-
-    let i = pin.gate.outpins.indexOf(pin);
-    let gateLogic = "("+pin.gate.type.logic[i]+")";
-    
-    console.log(i)
-    // for(let i=0; i<pin.gate.outpins.length; i++){
-        for(let j=0; j<pin.gate.inpins.length;j++){
-            if(pin.gate.inpins[j].connectedTo.type != "main_input_pin"){
-                let pinLogic = gateLogic;
-                for(let k=0; k<pin.gate.inpins[j].connectedTo.length-1;k++){
-                    pinLogic = gateLogic.replace("pin"+j, "("+e(pin.gate.inpins[j].connectedTo[k]+")|"));
-                }
-
-                gateLogic = gateLogic.replace("pin"+j, e(pin.gate.inpins[j].connectedTo.at(-1)));
-                console.log("gateLogic = "+gateLogic, j)
-            }
-            else{
-            //    str += "("+pin.gate.type.logic[i].replaceAll(""+j, pin.gate.inpins[j].connectedTo.state+")");
-            }
-        }
-    // }
-
-    return gateLogic;
-}
-    */
-
-
-
 // This function draws buttons and other interactive elements 
 function updateUI(){
     ctx.beginPath();
@@ -613,20 +548,6 @@ function drawConnections(){
         ctx.closePath();
     }
 }
-function connect(fromPin, toPin){
-    connectionPath.pop();
-    toPin.connectedTo.push(fromPin);
-    fromPin.connectedTo.push(toPin);
-    if(toPin.type != "main_output_pin"){
-        toPin.gate.inConnections.push(new connection(fromPin, toPin, fromPin.state, connectionPath));
-    }
-    else{
-        outpinConnections.push(new connection(fromPin, toPin, fromPin.state, connectionPath));
-    }
-    connectionPath = [];
-    selectedPin = undefined;
-    constructLogic();
-}
 
 function drawUI(){
     
@@ -732,7 +653,7 @@ function setUIlayout(){
     }, "topBarbtn"));                  // Clear Button
 
     buttons.push(new button(canvas.width*0.29, 5, canvas.width*0.09, 30, ()=>{canvas.requestFullscreen()}, "topBarbtn"));  // Fullscreen Button
-    buttons.push(new button(canvas.width*0.39, 5, canvas.width*0.09, 30, createGate, "topBarbtn"));                        // Ctreate Gate Button
+    buttons.push(new button(canvas.width*0.39, 5, canvas.width*0.09, 30, integrateCircuit, "topBarbtn"));                        // Ctreate Gate Button
 
     buttons.push(new button(canvas.width-40, 15, 20, 10, ()=>{
         selectedElementInfoMenuOpen = (selectedElementInfoMenuOpen)?false:true;
@@ -949,8 +870,6 @@ function drawElementInfoMenu(){
     //     setctx("transparent", "#888888", 2);
     // }
     
-    
-    
     drawRoundRect(x, y-1, 15, 20, 4, ctx.fillStyle, ctx.strokeStyle, 2);
     ctx.lineWidth = 1;
     ctx.moveTo(x+3, y+5);
@@ -972,9 +891,6 @@ function loadSavedFiles(){
         circuits.push(new circuit("OR", ["pin0|pin1"], 2, 1, "rgba(50 50 255 / 100%)"));
     }
     
-}
-function createGate(){
-
 }
 
 function configureDimensions(){
