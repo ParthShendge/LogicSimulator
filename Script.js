@@ -61,7 +61,7 @@ canvas.addEventListener("touchend", handleEnd);
 canvas.addEventListener("touchmove", handleMove);
 
 let gates    = [];
-let circuits = [];
+let circuits = []; // Including ICs
 
 let buttons = [];
 let inpins  = [];
@@ -74,9 +74,6 @@ let lastSelectedGate;
 let selectedPin;
 let cursorCoordinates;
 let selectedElementInfoMenuOpen = false;
-
-let logic;
-
 
 let UIupdateInterval;
 let clickedOnBlankScreen = true;
@@ -93,7 +90,8 @@ let settings = {
     selectedPinColor  : "#00afff",
     connectionLineColor: "rgba(100 100 100 / 50%)",
     connectionLineWidth: 3,
-    UIrefreshRate     : 60,
+    gateFontSize      : 15,
+    UIrefreshRate     : 30,
     // logicUIrefreshRate: 1000/gateDelay,
     sound             : false
 }
@@ -128,6 +126,7 @@ class circuit{
         this.color   = color;
     }
 }
+
 class gate{
     constructor(id, x, y, type, inConnections){
         this.id   = id;
@@ -482,7 +481,7 @@ function drawGates(){
         });
 
         ctx.fillStyle = gates[i].type.color;
-        ctx.font = width/2+"px monospace";
+        ctx.font = settings.gateFontSize+"px monospace";
         // Hightlighting selected gate 
         if(gates[i] == selectedGate){
             drawRoundRect(x-gatePadding, y-gatePadding, width + 2*gatePadding, height + 2*gatePadding, 5, "rgba(50 50 255 / 80%)", "White", 1);
@@ -647,11 +646,7 @@ function setUIlayout(){
 
     buttons.push(new button(canvas.width*0.09, 5, canvas.width*0.09, 30, ()=>{menu.gateMenuOpen = true; setGateMenuButtonsLayout()}, "topBarbtn")); // Gates Button
     
-    buttons.push(new button(canvas.width*0.19, 5, canvas.width*0.09, 30, ()=>{
-        gates = []; 
-        selectedGate = undefined; 
-        selectedPin = undefined; connectionPath = [];
-    }, "topBarbtn"));                  // Clear Button
+    buttons.push(new button(canvas.width*0.19, 5, canvas.width*0.09, 30, clearScreen, "topBarbtn"));                  // Clear Button
 
     buttons.push(new button(canvas.width*0.29, 5, canvas.width*0.09, 30, ()=>{canvas.requestFullscreen()}, "topBarbtn"));  // Fullscreen Button
     buttons.push(new button(canvas.width*0.39, 5, canvas.width*0.09, 30, integrateCircuit, "topBarbtn"));                        // Ctreate Gate Button
@@ -822,7 +817,7 @@ function drawGateMenu(){
     ctx.fillStyle = "Red";
     ctx.fillText("CLOSE", unitX*10+10, 62.5+unitY*5*i, unitX*10);
 }
-function setGateMenuButtonsLayout(){ // Reset function is also written inline in close button
+function setGateMenuButtonsLayout(){ // Reset function is written inline in close button
     const unitX = Math.round(canvas.width/100);
     const unitY = Math.round(canvas.height/100);
     let closeButtonPositionIndex;
@@ -878,6 +873,12 @@ function drawElementInfoMenu(){
     ctx.moveTo(x+12, y+5);
     ctx.lineTo(x+3, y+15);
     ctx.stroke();
+}
+function clearScreen(){
+    gates = []; 
+    selectedGate = undefined; 
+    selectedPin = undefined; 
+    connectionPath = [];
 }
 
 function save(){
