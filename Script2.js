@@ -83,18 +83,22 @@ function evaluate(){
         for(let j=0;j<gates[i].inConnections.length;j++){
             gates[i].inConnections[j].state =  gates[i].inConnections[j].from.state;
             
-            gates[i].inConnections[j].to.state =  gates[i].inConnections[j].from.state;
-            const func = ()=>{
                 for(let x=0; x<gates[i].outpins.length;x++){
                     
                     let logicString = gates[i].type.logic[x];
                     for(let y=0; y<gates[i].inpins.length; y++){
+                        gates[i].inpins[y].state = 0;
+                        for(let z=0; z<gates[i].inpins[y].connectedTo.length;z++){
+                            if(gates[i].inpins[y].connectedTo[z].state === 1){
+                                gates[i].inpins[y].state = 1;
+                                break;
+                            }
+                        }
                         logicString = logicString.replaceAll(`pin${y}`, gates[i].inpins[y].state);
                     }
-                    gates[i].outpins[x].state = eval(logicString)?1:2;
+
+                    setTimeout(gates[i].outpins[x].state = eval(logicString)?1:0, 200);
                 }
-            };
-            setTimeout(func, 200);
         }
     }
 }
