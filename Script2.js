@@ -13,6 +13,10 @@ function connect(fromPin, toPin){
     else{
         outpinConnections.push(new connection(fromPin, toPin, fromPin.state, connectionPath));
     }
+    if(fromPin.type != "main_input_pin"){
+        fromPin.gate.outConnections.push();
+    }
+    
     connectionPath = [];
     selectedPin = undefined;
     constructLogic();

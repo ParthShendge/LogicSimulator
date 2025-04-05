@@ -134,7 +134,9 @@ class gate{
         this.y    = y;
         this.type = type;
         this.inConnections  = inConnections;
+        this.outConnections = [];
         this.connectionLevel = 0;
+        this.outputColour = settings.activePinColor;
 
         this.beingDragged = false; // Set to true while changing the position of gate
         
@@ -296,6 +298,22 @@ function handleClick(e){
         }
         if(!pinExists){
             outpins.push(new pin(x, y, 0, "main_output_pin", undefined));
+        }
+    }
+
+    // Checking if user clicked on element info menu and closing it if user clicked anywhere else
+    if(selectedElementInfoMenuOpen){
+        const width = 240;
+        const height = (selectedPin!=undefined) ? 100 + selectedPin.connectedTo.length*20 : 120;
+        const x = canvas.width-settings.pinContainerWidth - width - 10;
+        const y = 10+settings.topBarHeight;
+        if(cx>x && cx<x+width && cy>y && cy<y+height){
+            console.log("area clicked")
+            clickedOnBlankScreen = false;
+        }
+        else if(cy>settings.topBarHeight){
+            selectedElementInfoMenuOpen = false;
+            console.log("closing info menu")
         }
     }
 }
@@ -653,6 +671,12 @@ function setUIlayout(){
 
     buttons.push(new button(canvas.width-40, 15, 20, 10, ()=>{
         selectedElementInfoMenuOpen = (selectedElementInfoMenuOpen)?false:true;
+        if(selectedElementInfoMenuOpen){
+            setSelectedElementInfoMenuLayout();
+        }
+        else{
+            resetSelectedElementInfoMenuLayout();
+        }
     }, "topbarbtn"));
 }
 
@@ -848,39 +872,123 @@ function setGateMenuButtonsLayout(){ // Reset function is written inline in clos
 
 function drawElementInfoMenu(){
     
-    const width = 100;
-    const height = 100;
+    const width = 240;
+    const height = (selectedPin!=undefined) ? 100 + selectedPin.connectedTo.length*20 : 120;
     const x = canvas.width-settings.pinContainerWidth - width - 10;
     const y = 10+settings.topBarHeight;
 
-    drawRoundRect(x, y, width, height, 5, "Black", "#888888", 2);
-    
-    if(selectedPin == "main_input_pin" || selectedPin == "main_output_pin"){
-
-    }
-    // Drawing delete button
-    // if(selectedPin.type == "main_input_pin" || selectedPin.type == "main_output_pin" || selectedGate != undefined){
+    drawRoundRect(x, y, width, height, 5, "Black", "#222222", 2);
+    ctx.font = "12px monospace";
+    ctx.fillStyle = "#00afff";
+    if (lastSelectedGate != undefined){
+        ctx.fillText("Selected gate id : "+lastSelectedGate.id, x+10, y+15, 150);
+        ctx.fillText("Selected gate type : "+lastSelectedGate.type.name, x+10, y+30, 150);
+        ctx.fillText("Select Output Colour : ", x+10, y+45, 150);
+        // Drawing Output Colour Preview (This also acts as a button to change output coulor)
+        drawRoundRect(x+width-65, y+30, 60, 20, 5, lastSelectedGate.outputColour.replace("100%", "30%"), lastSelectedGate.outputColour, 1);
+        //Drawing Delete Button
+        ctx.fillStyle = "Red";
+        ctx.fillText("DELETE", x+width-65, y+16, 50);
         setctx("rgba(255 50 50 / 20%)", "rgba(255 0 0 / 100%)", 2);
-    // }
-    // else{
-    //     setctx("transparent", "#888888", 2);
-    // }
+    }
+    else{
+        ctx.fillText("No Gate Selected", x+20, y+20, 200);
+        setctx("rgba(50 50 50 / 20%)", "rgba(50 50 50 / 100%)", 2);
+    }
     
-    drawRoundRect(x, y-1, 15, 20, 4, ctx.fillStyle, ctx.strokeStyle, 2);
+    drawRoundRect(x+width-72, y+2, 70, 20, 4, ctx.fillStyle, ctx.strokeStyle, 1);
     ctx.lineWidth = 1;
-    ctx.moveTo(x+3, y+5);
-    ctx.lineTo(x+12, y+15);
-    ctx.moveTo(x+12, y+5);
-    ctx.lineTo(x+3, y+15);
+    ctx.moveTo(x+width-20, y+6);
+    ctx.lineTo(x+width-8, y+16);
+    ctx.moveTo(x+width-8, y+6);
+    ctx.lineTo(x+width-20, y+16);
     ctx.stroke();
+
+
+    ctx.strokeStyle = "#555555";
+    ctx.moveTo(x, y+60);
+    ctx.lineTo(x+width, y+60);
+    ctx.stroke();
+    if(selectedPin == "main_input_pin" || selectedPin == "main_output_pin"){
+        setctx("rgba(255 50 50 / 20%)", "rgba(255 0 0 / 100%)", 2);
+    }
+    else{
+        setctx("rgba(50 50 50 / 20%)", "rgba(50 50 50 / 100%)", 2);
+    }
+}
+function setSelectedElementInfoMenuLayout(){
+    const width = 240;
+    const height = (selectedPin!=undefined) ? 100 + selectedPin.connectedTo.length*20 : 120;
+    const x = canvas.width-settings.pinContainerWidth - width - 10;
+    const y = 10+settings.topBarHeight;
+
+    if(lastSelectedGate != undefined){
+        buttons.push(new button(x+width-72, y+2, 70, 20, ()=>{deleteGate(lastSelectedGate); lastSelectedGate = undefined; console.log("Deleting Gate")}), "element_info_menu_btn") // Delete gate button
+        buttons.push(new button(x+width-65, y+30, 60, 20, ()=>{lastSelectedGate.outputColour = pickColour()}), "element_info_menu_btn") // Delete gate button
+    }
+    
+}
+function resetSelectedElementInfoMenuLayout(){
+
 }
 function clearScreen(){
-    gates = []; 
+    while(gates.length != 0){
+        deleteGate(gates.at(-1));
+    }
+    while(inpins.length != 0){
+        delete inpins.at(-1);
+        inpins.splice(inpins.length-1, 1);
+    }
+    while(outpins.length != 0){
+        delete outpins.at(-1);
+        outpins.splice(outpins.length-1, 1);
+    }
+    lastSelectedGate = undefined;
     selectedGate = undefined; 
     selectedPin = undefined; 
     connectionPath = [];
+    outpinConnections = [];
+    outpins = [];
+    inpins = [];
 }
+function deleteGate(gate){
+   
+    for(let i=0; i<gate.inpins.length; i++){
+        for(let j=0; j<gate.inpins[i].connectedTo.length; j++){
+            gate.inpins[i].connectedTo[j].connectedTo.splice(gate.inpins[i].connectedTo[j].connectedTo.indexOf(gate.inpins[i]), 1);
+        }
+        delete gate.inConnections[i];
+        delete gate.inpins[i];    
+    }
+    for(let i=0; i<gate.outpins.length; i++){   
+        for(let j=0; j<gate.outpins[i].connectedTo.length; j++){
+            gate.outpins[i].connectedTo[j].connectedTo.splice(gate.outpins[i].connectedTo[j].connectedTo.indexOf(gate.outpins[i]), 1);
+        }
+        delete gate.outConnections[i];
+        delete gate.outpins[i];    
+    }
+    gates.splice(gates.indexOf(gate), 1);
+    delete gate;
+}
+function deleteConnection(line){
+    if(line.from.type == "main_input_pin"){
 
+    }
+    else if(line.to.type == "main_output_pin"){
+
+    }
+    else{
+
+    }
+}
+function deletePin(pin){
+    if(pin.type == "main_input_pin"){
+        
+    }
+    else if(pin.type == "main_output_pin"){
+        
+    }
+}
 function save(){
     notify("Save Successful", 3000);
 }
@@ -894,7 +1002,10 @@ function loadSavedFiles(){
     }
     
 }
-
+function pickColour(){
+    console.log("Picking Colour");
+    return lastSelectedGate.outputColour;
+}
 function configureDimensions(){
     canvas.width=window.innerWidth; 
     canvas.height=window.innerHeight; 
